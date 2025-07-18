@@ -13,7 +13,7 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    ¡Crea y destruye Toggles a cascoporro! Solo para idealistas...
+    Crea y destruye Toggles a cascoporro. Solo para idealistas...
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
