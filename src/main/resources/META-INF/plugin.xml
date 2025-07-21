@@ -29,9 +29,15 @@
     <actions>
         <action id="com.idealista.togglehandler.CreateToggleAction"
                 class="com.idealista.togglehandler.CreateToggleAction"
-                text="Crear Toggle"
+                text="🟢 Crear Toggle"
                 description="Abrir el diálogo para crear un nuevo toggle">
             <add-to-group group-id="ToolsMenu" anchor="first"/>
+        </action>
+        <action id="com.idealista.togglehandler.DeleteToggleAction"
+                class="com.idealista.togglehandler.DeleteToggleAction"
+                text="🔴 Eliminar Toggle"
+                description="Abrir el diálogo para eliminar un toggle">
+            <add-to-group group-id="ToolsMenu" anchor="after" relative-to-action="com.idealista.togglehandler.CreateToggleAction"/>
         </action>
     </actions>
 </idea-plugin>

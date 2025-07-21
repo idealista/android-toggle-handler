@@ -3,6 +3,7 @@ package com.idealista.togglehandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBCheckBox
@@ -17,28 +18,6 @@ import java.util.*
 import javax.swing.*
 
 class CreateToggleDialog(private val project: Project) : DialogWrapper(project) {
-
-    companion object {
-        data class ToggleData(
-            val name: String,
-            val jiraTask: String,
-            val description: String,
-            val isRemotelyConfigurable: Boolean,
-            val activationDate: String,
-            val activationVersion: String,
-            val deprecationDate: String,
-        )
-
-        data object ToggleFile
-        data object ServiceExtensionsFile
-        data object RemoteSettingsDefaultsFile
-
-        private val TARGET_FILES = mapOf(
-            "Toggle.kt" to ToggleFile,
-            "ServiceExtensions.kt" to ServiceExtensionsFile,
-            "RemoteSettingsDefaults.kt" to RemoteSettingsDefaultsFile
-        )
-    }
 
     private val fileModifier = ToggleFileModifier(project)
     private val toggleNameField = JBTextField()
@@ -200,7 +179,7 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
             dateFormat.format(deprecationDateSpinner.value)
         } else ""
 
-        val toggleData = ToggleData(
+        val toggleData = ToggleDefinitions.ToggleData(
             name = toggleNameField.text.trim(),
             jiraTask = jiraTaskField.text.trim(),
             description = description.text.trim(),
@@ -215,7 +194,7 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
         super.doOKAction()
     }
 
-    private fun createToggle(toggleData: ToggleData) {
+    private fun createToggle(toggleData: ToggleDefinitions.ToggleData) {
         val filesToModify = findToggleFiles()
 
         if (filesToModify.isNotEmpty()) {
@@ -227,9 +206,9 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
         val foundFiles = mutableListOf<Pair<PsiFile, Any>>()
         val scope = GlobalSearchScope.projectScope(project)
 
-        TARGET_FILES.forEach { (fileName, fileType) ->
+        ToggleDefinitions.TARGET_FILES.forEach { (fileName, fileType) ->
             val files = FilenameIndex.getVirtualFilesByName(fileName, scope).mapNotNull { virtualFile ->
-                com.intellij.psi.PsiManager.getInstance(project).findFile(virtualFile)
+                PsiManager.getInstance(project).findFile(virtualFile)
             }
 
             files.forEach { file ->
@@ -240,14 +219,14 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
         return foundFiles
     }
 
-    private fun modifyFilesToAddToggle(files: List<Pair<PsiFile, Any>>, toggleData: ToggleData) {
+    private fun modifyFilesToAddToggle(files: List<Pair<PsiFile, Any>>, toggleData: ToggleDefinitions.ToggleData) {
         files.forEach { (file, fileType) ->
             when (fileType) {
-                ToggleFile -> { fileModifier.addToggleDefinition(file, toggleData) }
+                ToggleDefinitions.ToggleFile -> { fileModifier.addToggleDefinition(file, toggleData) }
 
-                ServiceExtensionsFile -> { fileModifier.addServiceExtensions(file, toggleData) }
+                ToggleDefinitions.ServiceExtensionsFile -> { fileModifier.addServiceExtensions(file, toggleData) }
 
-                RemoteSettingsDefaultsFile -> { fileModifier.addRemoteSettingsDefaults(file, toggleData) }
+                ToggleDefinitions.RemoteSettingsDefaultsFile -> { fileModifier.addRemoteSettingsDefaults(file, toggleData) }
             }
         }
     }
