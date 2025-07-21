@@ -30,13 +30,11 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
         )
 
         data object ToggleFile
-        data object ToggleDocFile
         data object ServiceExtensionsFile
         data object RemoteSettingsDefaultsFile
 
         private val TARGET_FILES = mapOf(
             "Toggle.kt" to ToggleFile,
-            "ToggleDoc.kt" to ToggleDocFile,
             "ServiceExtensions.kt" to ServiceExtensionsFile,
             "RemoteSettingsDefaults.kt" to RemoteSettingsDefaultsFile
         )
@@ -246,8 +244,6 @@ class CreateToggleDialog(private val project: Project) : DialogWrapper(project) 
         files.forEach { (file, fileType) ->
             when (fileType) {
                 ToggleFile -> { fileModifier.addToggleDefinition(file, toggleData) }
-
-                ToggleDocFile -> { fileModifier.addToggleDocumentation(file, toggleData) }
 
                 ServiceExtensionsFile -> { fileModifier.addServiceExtensions(file, toggleData) }
 

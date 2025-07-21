@@ -22,127 +22,42 @@ class ToggleFileModifier(private val project: Project) {
 
         val fileText = document.text
         val snakeCaseName = convertToSnakeCase(toggleData.name)
-        val newToggleDefinition =
-            "    data object ${toggleData.name} : Toggle(\"$snakeCaseName\", ${toggleData.isRemotelyConfigurable})"
-        val lastDataObjectIndex = fileText.lastIndexOf("data object")
-
-        if (lastDataObjectIndex == -1) {
-            Messages.showErrorDialog(
-                project,
-                "Could not find data object pattern in Toggle.kt",
-                "Error"
-            )
-
-            return
-        }
-
-        val endOfLastDataObject = fileText.indexOf('\n', lastDataObjectIndex)
-
-        if (endOfLastDataObject == -1) {
-            Messages.showErrorDialog(
-                project,
-                "Could not find insertion point in Toggle.kt",
-                "Error"
-            )
-
-            return
-        }
-
-        val insertPosition = endOfLastDataObject + 1
-
-        WriteCommandAction.runWriteCommandAction(project) {
-            try {
-                document.insertString(insertPosition, "$newToggleDefinition\n")
-                PsiDocumentManager.getInstance(project).commitDocument(document)
-            } catch (e: Exception) {
-                Messages.showErrorDialog(
-                    project,
-                    "Error adding toggle: ${e.message}",
-                    "Error"
-                )
-            }
-        }
-    }
-
-    fun addToggleDocumentation(file: PsiFile, toggleData: CreateToggleDialog.Companion.ToggleData) {
-        val document = PsiDocumentManager.getInstance(project).getDocument(file)
-
-        if (document == null) {
-            Messages.showErrorDialog(
-                project,
-                "Could not access document for file: ${file.name}",
-                "Error"
-            )
-
-            return
-        }
-
-        val fileText = document.text
-        val lastIdToggleIndex = fileText.lastIndexOf("IdToggle(")
-
-        if (lastIdToggleIndex == -1) {
-            Messages.showErrorDialog(
-                project,
-                "Could not find IdToggle pattern in documentation file",
-                "Error"
-            )
-
-            return
-        }
-
-        var currentIndex = lastIdToggleIndex
-        var parenthesesCount = 0
-        var foundOpeningParenthesis = false
-
-        while (currentIndex < fileText.length) {
-            val char = fileText[currentIndex]
-            when (char) {
-                '(' -> {
-                    parenthesesCount++
-                    foundOpeningParenthesis = true
-                }
-
-                ')' -> {
-                    parenthesesCount--
-                    if (foundOpeningParenthesis && parenthesesCount == 0) {
-                        val nextCommaIndex = fileText.indexOf(',', currentIndex)
-                        if (nextCommaIndex != -1) {
-                            val nextNewlineIndex = fileText.indexOf('\n', nextCommaIndex)
-                            currentIndex = if (nextNewlineIndex != -1) {
-                                nextNewlineIndex + 1
-                            } else {
-                                fileText.length
-                            }
-                        }
-                        break
-                    }
-                }
-            }
-            currentIndex++
-        }
 
         val description = if (toggleData.jiraTask.isNotEmpty()) {
             "${toggleData.jiraTask} ${toggleData.description}"
         } else {
-            toggleData.description.ifEmpty { "DESCRIPTION_UNKNOWN" }
+            toggleData.description.ifEmpty { "Información desconocida" }
         }
 
-        val newIdToggle = """, IdToggle(
-        toggle = Toggle.${toggleData.name},
+        val newToggleDefinition = """
+    data object ${toggleData.name} : Toggle(
+        name = "$snakeCaseName",
+        isRemoteConfigurable = ${toggleData.isRemotelyConfigurable},
         activationDate = "${toggleData.activationDate}",
         activationVersion = "${toggleData.activationVersion}",
         deprecationDate = "${toggleData.deprecationDate}",
         description = "$description"
     )"""
 
+        val classToggleEndIndex = fileText.lastIndexOf("}")
+
+        if (classToggleEndIndex == -1) {
+            Messages.showErrorDialog(
+                project,
+                "Could not find closing brace of Toggle class",
+                "Error"
+            )
+            return
+        }
+
         WriteCommandAction.runWriteCommandAction(project) {
             try {
-                document.insertString(currentIndex + 1, newIdToggle)
+                document.insertString(classToggleEndIndex, "$newToggleDefinition\n")
                 PsiDocumentManager.getInstance(project).commitDocument(document)
             } catch (e: Exception) {
                 Messages.showErrorDialog(
                     project,
-                    "Error adding toggle documentation: ${e.message}",
+                    "Error adding toggle: ${e.message}",
                     "Error"
                 )
             }
